@@ -34,19 +34,25 @@ const siteHeader = `
 		<div id="sidebar">
 			This is a testing site for the sick Goblog blogging.
 		</div>
-`
-const siteFooter = `
+	{{range .}}
+	<div class="post">
+	       <div class="post_header">written by <b>{{.Author}}</b> on <b>{{.Date}}</b></div>
+	       <br/>
+	       <div class="post_text">{{.Text}}</div>
+	</div>
+	{{end}}
 	</div>
 	</body>
 </html>
 `
 
 var renderTemplate = template.Must(template.New("post").Parse(renderTemplateHTML))
+var siteHeaderTemplate = template.Must(template.New("site").Parse(siteHeader))
 
 func RenderAllPosts(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 
-	fmt.Fprintf(w, siteHeader)
+	//fmt.Fprintf(w, siteHeader)
 
 	//p1 := Post{
 	//"Joe Smith",
@@ -66,6 +72,7 @@ func RenderAllPosts(w http.ResponseWriter, r *http.Request) {
 	//if err != nil {
 	//fmt.Fprintf(w, "<p>ERROR. q.Count() returned '%v'</p>", err)
 	//}
+	//fmt.Fprintf(w, "<p>%v</p>", count)
 
 	var allPosts Posts
 	_, err := q.GetAll(c, &allPosts)
@@ -74,14 +81,7 @@ func RenderAllPosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sort.Sort(sort.Reverse(allPosts))
-
-	for i := range allPosts {
-		//fmt.Fprintln(w, *allPosts[i])
-		if err := renderTemplate.Execute(w, allPosts[i]); err != nil {
-			fmt.Fprintf(w, "<p>ERROR. renderTemplate.Execute() on post #%v returned `%v`</p>", i, err)
-		}
+	if err := siteHeaderTemplate.Execute(w, []*Post(allPosts)); err != nil {
+		fmt.Fprintf(w, "<p>ERROR. renderTemplate.Execute() returned `%v`</p>", err)
 	}
-
-	//fmt.Fprintf(w, "<p>%v</p>", count)
-	fmt.Fprintf(w, siteFooter)
 }
