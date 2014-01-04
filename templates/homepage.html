@@ -1,24 +1,13 @@
-<html>
-	<head>
-		<title>Goblog Testing Site</title>	
-		<link rel="stylesheet" type="text/css" href="/stylesheets/main.css"/>
-	</head>
-	<body>
-		<div id="top_bar">
-			<div id="header"><a href="/">Goblog Testing Site</a></div>
-			<div id="header_accent"></div>
-		</div>
-	<div id="main">
-		<div id="sidebar">
-			This is a testing site for the sick Goblog blogging.
-		</div>
-	{{range .}}
-	<div class="post">
-	       <div class="post_header">written by <b>{{.Author}}</b> on <b>{{.Date}}</b></div>
-	       <br/>
-	       <div class="post_text">{{.Text}}</div>
+<div id="sidebar">
+       	This is a testing site for the sick Goblog blogging.
+</div>
+
+{{range .}}
+<div class="post">
+	<div class="post_header">
+		written by <b>{{.Author}}</b> on <b>{{.Date}}</b>
 	</div>
-	{{end}}
-	</div>
-	</body>
-</html>
+	<br/>
+	<div class="post_text">{{.Text}}</div>
+</div>
+{{end}}
