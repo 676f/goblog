@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"sort"
 	//"time"
+	"github.com/676f/goblog/datatypes"
 
 	"appengine"
 	"appengine/datastore"
@@ -67,7 +68,7 @@ func RenderAllPosts(w http.ResponseWriter, r *http.Request) {
 	//fmt.Fprintf(w, "<p>ERROR. q.Count() returned '%v'</p>", err)
 	//}
 
-	var allPosts Posts
+	var allPosts datatypes.Posts
 	_, err := q.GetAll(c, &allPosts)
 	if err != nil {
 		fmt.Fprintf(w, "<p>ERROR. q.GetAll() returned `%v`</p>", err)

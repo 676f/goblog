@@ -1,4 +1,4 @@
-package goblog
+package datatypes
 
 import (
 	"time"
