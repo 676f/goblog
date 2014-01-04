@@ -5,9 +5,10 @@ import (
 	"appengine/datastore"
 	"appengine/user"
 	"github.com/676f/goblog/datatypes"
-	"html/template"
+	htemplate "html/template"
 	"log"
 	"net/http"
+	ttemplate "text/template"
 	"time"
 )
 
@@ -20,14 +21,15 @@ func post(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		save(w, r)
 	} else {
-		var err error
-		var templates *template.Template
 
-		if templates, err = template.New("").ParseFiles("templates/post.html"); err != nil {
+		var postTemplate = htemplate.Must(htemplate.New("").ParseFiles("templates/post.html"))
+		var headerTemplate = ttemplate.Must(ttemplate.New("").ParseFiles("templates/header.html"))
+		var hpb = datatypes.WebPageBody{}
+
+		if err := postTemplate.ExecuteTemplate(&hpb, "post.html", nil); err != nil {
 			log.Fatal(err)
 		}
-
-		if err := templates.ExecuteTemplate(w, "post.html", nil); err != nil {
+		if err := headerTemplate.ExecuteTemplate(w, "header.html", hpb); err != nil {
 			log.Fatal(err)
 		}
 	}
