@@ -55,5 +55,5 @@ func save(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	http.Redirect(w, r, "/post/" + strconv.FormatInt(key.IntID(),10), http.StatusFound)
+	http.Redirect(w, r, "/posts/" + strconv.FormatInt(key.IntID(),10), http.StatusFound)
 }
