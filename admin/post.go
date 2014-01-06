@@ -10,6 +10,7 @@ import (
 	"net/http"
 	ttemplate "text/template"
 	"time"
+	"strconv"
 )
 
 func init() {
@@ -48,11 +49,11 @@ func save(w http.ResponseWriter, r *http.Request) {
 	u := user.Current(c)
 
 	p := datatypes.Post{u.String(), r.FormValue("title"), r.FormValue("blogcontent"), time.Now()}
-
-	_, err := datastore.Put(c, datastore.NewIncompleteKey(c, "post", nil), &p)
+	
+	key, err := datastore.Put(c, datastore.NewIncompleteKey(c, "post", nil), &p)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	http.Redirect(w, r, "/", http.StatusFound)
+	http.Redirect(w, r, "/post/" + strconv.FormatInt(key.IntID(),10), http.StatusFound)
 }
