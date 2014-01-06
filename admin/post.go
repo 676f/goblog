@@ -8,6 +8,7 @@ import (
 	htemplate "html/template"
 	"log"
 	"net/http"
+	"strconv"
 	ttemplate "text/template"
 	"time"
 )
@@ -17,7 +18,6 @@ func init() {
 }
 
 func post(w http.ResponseWriter, r *http.Request) {
-
 	if r.Method == "POST" {
 		save(w, r)
 	} else {
@@ -37,22 +37,19 @@ func post(w http.ResponseWriter, r *http.Request) {
 }
 
 func save(w http.ResponseWriter, r *http.Request) {
-
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	c := appengine.NewContext(r)
-
 	u := user.Current(c)
 
-	p := datatypes.Post{u.String(), r.FormValue("title"), r.FormValue("blogcontent"), time.Now()}
-
-	_, err := datastore.Put(c, datastore.NewIncompleteKey(c, "post", nil), &p)
+	p := datatypes.Post{u.String(), r.FormValue("title"), r.FormValue("blogcontent"), time.Now(), -1}
+	key, err := datastore.Put(c, datastore.NewIncompleteKey(c, "post", nil), &p)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	http.Redirect(w, r, "/", http.StatusFound)
+	http.Redirect(w, r, "/posts/"+strconv.FormatInt(key.IntID(), 10), http.StatusFound)
 }

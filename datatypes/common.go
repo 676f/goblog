@@ -8,6 +8,7 @@ import (
 type Post struct {
 	Author, Title, Text string
 	Date                time.Time
+	ID                  int64
 }
 
 type Posts []*Post

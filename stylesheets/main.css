@@ -63,8 +63,11 @@ body {
 
 .post_header {
 	border-bottom-style:dotted;
+	border-left-style:dotted;
 	border-bottom-color:black;
+	border-left-color:black;
 	/*color:5e606b;*/
+	padding:0px;
 }
 
 .post_text {

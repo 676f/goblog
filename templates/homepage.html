@@ -5,6 +5,9 @@
 {{range .}}
 <div class="post">
 	<div class="post_header">
+		<a href="/posts/{{.ID}}">
+			<h3>{{.Title}}</h3>
+		</a>
 		written by <b>{{.Author}}</b> on <b>{{.Date}}</b>
 	</div>
 	<br/>
