@@ -19,26 +19,32 @@ func init() {
 }
 
 var siteHeaderTemplate = ttemplate.Must(ttemplate.New("").ParseFiles("templates/header.html"))
-var renderTemplate = htemplate.Must(htemplate.New("").ParseFiles("templates/homepage.html", "templates/archive.html"))
+var renderTemplate = htemplate.Must(htemplate.New("").ParseFiles("templates/homepage.html", "templates/archive.html", "templates/404.html"))
 
 func renderPosts(w http.ResponseWriter, r *http.Request) {
-	c := appengine.NewContext(r)
-
 	if r.URL.String() == "/" {
-		fmt.Fprintf(w, renderPost(c, -1, 5, "homepage.html"))
+		fmt.Fprintf(w, renderPost(r, -1, 5, "homepage.html"))
 		return
 	}
 
 	splitURL := strings.SplitAfter(r.URL.String(), "/")
+	// if the first part of the URL ends with '/', remove the '/'
+	if splitURL[1][len(splitURL[1])-1] == '/' {
+		splitURL[1] = splitURL[1][:len(splitURL[1])-1]
+	}
+
 	switch splitURL[1] {
-	case "posts/":
-		postID, err := strconv.ParseInt(splitURL[2], 10, 64)
-		if err != nil {
-			fmt.Fprintf(w, "<p>404<br>Invalid page number with %v</p>", splitURL)
+	case "posts":
+		if len(splitURL) == 3 {
+			postID, err := strconv.ParseInt(splitURL[2], 10, 64)
+			if err != nil {
+				fmt.Fprintf(w, Error404(r))
+				return
+			}
+			fmt.Fprintf(w, renderPost(r, postID, -1, "homepage.html"))
+		} else {
+			fmt.Fprintf(w, renderPost(r, -1, -1, "archive.html"))
 		}
-		fmt.Fprintf(w, renderPost(c, postID, -1, "homepage.html"))
-	case "archive": // there should be no trailing / (as in "archive/"). This should be changed. Regex "archive/?"
-		fmt.Fprintf(w, renderPost(c, -1, -1, "archive.html"))
 	default:
 		fmt.Fprintf(w, "<p>404<br>Tried to fetch with %v</p>", splitURL)
 		return
@@ -48,7 +54,8 @@ func renderPosts(w http.ResponseWriter, r *http.Request) {
 // renderPost renders a single post if postID != -1, or it renders the specified number of posts (newest first) if numToRender != -1.
 // If both parameters are -1, then it renders all posts (newest first).
 // The function returns a string of the resulting templated HTML.
-func renderPost(c appengine.Context, postID int64, numToRender int, postTemplateName string) string {
+func renderPost(r *http.Request, postID int64, numToRender int, postTemplateName string) string {
+	c := appengine.NewContext(r)
 	hpb := datatypes.WebPageBody{}
 	finalHpb := datatypes.WebPageBody{}
 
@@ -71,6 +78,9 @@ func renderPost(c appengine.Context, postID int64, numToRender int, postTemplate
 	if err != nil {
 		return fmt.Sprintf("<p>ERROR. q.GetAll() returned `%v`</p>", err)
 	}
+	if len(allPosts) == 0 {
+		return Error404(r)
+	}
 
 	for i := range allPosts {
 		allPosts[i].ID = keys[i].IntID()
@@ -78,6 +88,20 @@ func renderPost(c appengine.Context, postID int64, numToRender int, postTemplate
 	sort.Sort(sort.Reverse(datatypes.Posts(allPosts)))
 
 	if err := renderTemplate.ExecuteTemplate(&hpb, postTemplateName, allPosts); err != nil {
+		return fmt.Sprintf("<p>ERROR. renderTemplate.Execute() returned `%v`</p>", err)
+	}
+	if err := siteHeaderTemplate.ExecuteTemplate(&finalHpb, "header.html", hpb); err != nil {
+		return fmt.Sprintf("<p>ERROR. renderTemplate.Execute() returned `%v`</p>", err)
+	}
+
+	return finalHpb.HTMLBody
+}
+
+func Error404(r *http.Request) string {
+	hpb := datatypes.WebPageBody{}
+	finalHpb := datatypes.WebPageBody{}
+
+	if err := renderTemplate.ExecuteTemplate(&hpb, "404.html", r); err != nil {
 		return fmt.Sprintf("<p>ERROR. renderTemplate.Execute() returned `%v`</p>", err)
 	}
 	if err := siteHeaderTemplate.ExecuteTemplate(&finalHpb, "header.html", hpb); err != nil {
