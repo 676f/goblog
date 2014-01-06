@@ -21,8 +21,17 @@ body {
 	padding:0;
 }
 
+#top_bar_accent {
+	position:relative;
+	right:0px;
+	bottom:20px;
+	width:100%;
+	height:20px;
+	background-color:7e8a83;
+}
+
 #header {
-	width:800px;
+	width:1024px;
 	height:100%;
 	float:center;
 	margin:0 auto;
@@ -30,20 +39,16 @@ body {
 	text-align:center;
 	font-size:3em;
 	color:a6412b;
-	background-color:#d0dec2;
+	background-color:d0dec2;
 }
 
 #header a {
 	color:a6412b;
 }
 
-#header_accent {
+#header_menu {
 	position:relative;
-	right:0px;
-	bottom:20px;
-	width:100%;
-	height:20px;
-	background-color:7e8a83;
+	width:100%
 }
 
 .post {

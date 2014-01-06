@@ -5,10 +5,25 @@
 	</head>
 	<body>
 		<div id="top_bar">
-			<div id="header"><a href="/">Goblog Testing Site</a></div>
-			<div id="header_accent"></div>
+			<div id="header">
+				<a href="/">Goblog Testing Site</a>
+				<div id="header_menu">
+					<table>
+						<tr>
+							<td><a href="/archive">Archive</a></td>
+							<td><a href="/admin/post">Post</a></td>
+						</tr>
+					</table>
+				</div>
+			</div>
+			<div id="top_bar_accent"></div>
 		</div>
 	<div id="main">
+	<div id="sidebar">
+		<p>News goes here.</p>
+		<p>Put ads here or something.</p>
+	</div>
+
 	{{.HTMLBody}}
 	</div>
 	</body>
