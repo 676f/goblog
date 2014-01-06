@@ -19,34 +19,36 @@ func init() {
 }
 
 var siteHeaderTemplate = ttemplate.Must(ttemplate.New("").ParseFiles("templates/header.html"))
-var homePageBodyTemplate = htemplate.Must(htemplate.New("").ParseFiles("templates/homepage.html"))
+var renderTemplate = htemplate.Must(htemplate.New("").ParseFiles("templates/homepage.html", "templates/archive.html"))
 
 func renderPosts(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 
+	if r.URL.String() == "/" {
+		fmt.Fprintf(w, renderPost(c, -1, 5, "homepage.html"))
+		return
+	}
+
 	splitURL := strings.SplitAfter(r.URL.String(), "/")
-	// the split slice ends with a blank entry
-	postNum := splitURL[len(splitURL)-2]
-	if postNum != "/" {
-		if splitURL[1] != "posts/" {
-			fmt.Fprintf(w, "<p>404<br>Tried to fetch with %v</p>", splitURL)
-			return
-		}
+	switch splitURL[1] {
+	case "posts/":
 		postID, err := strconv.ParseInt(splitURL[2], 10, 64)
 		if err != nil {
 			fmt.Fprintf(w, "<p>404<br>Invalid page number with %v</p>", splitURL)
 		}
-		fmt.Fprintf(w, renderPost(c, postID, -1))
+		fmt.Fprintf(w, renderPost(c, postID, -1, "homepage.html"))
+	case "archive": // there should be no trailing / (as in "archive/"). This should be changed. Regex "archive/?"
+		fmt.Fprintf(w, renderPost(c, -1, -1, "archive.html"))
+	default:
+		fmt.Fprintf(w, "<p>404<br>Tried to fetch with %v</p>", splitURL)
 		return
 	}
-
-	fmt.Fprintf(w, renderPost(c, -1, 5))
 }
 
 // renderPost renders a single post if postID != -1, or it renders the specified number of posts (newest first) if numToRender != -1.
 // If both parameters are -1, then it renders all posts (newest first).
 // The function returns a string of the resulting templated HTML.
-func renderPost(c appengine.Context, postID int64, numToRender int) string {
+func renderPost(c appengine.Context, postID int64, numToRender int, postTemplateName string) string {
 	hpb := datatypes.WebPageBody{}
 	finalHpb := datatypes.WebPageBody{}
 
@@ -75,7 +77,7 @@ func renderPost(c appengine.Context, postID int64, numToRender int) string {
 	}
 	sort.Sort(sort.Reverse(datatypes.Posts(allPosts)))
 
-	if err := homePageBodyTemplate.ExecuteTemplate(&hpb, "homepage.html", allPosts); err != nil {
+	if err := renderTemplate.ExecuteTemplate(&hpb, postTemplateName, allPosts); err != nil {
 		return fmt.Sprintf("<p>ERROR. renderTemplate.Execute() returned `%v`</p>", err)
 	}
 	if err := siteHeaderTemplate.ExecuteTemplate(&finalHpb, "header.html", hpb); err != nil {

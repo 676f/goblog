@@ -1,0 +1,19 @@
+<div id="sidebar">
+	<p>News goes here.</p>
+	<p>Put ads here or something.</p>
+</div>
+<table>
+	<tr>
+		<td>Title</td>
+		<td>Author</td>
+		<td>Date</td>
+	</tr>
+
+	{{range .}}
+	<tr>
+		<td><b><a href="/posts/{{.ID}}">{{.Title}}</a></b></td>
+		<td>{{.Author}}</td>
+		<td>{{.Date}}</td>
+	</tr>
+	{{end}}
+</table>
