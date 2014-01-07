@@ -5,33 +5,26 @@ import (
 	"appengine/datastore"
 	"appengine/user"
 	"github.com/676f/goblog/datatypes"
+	"github.com/676f/goblog/render"
 	htemplate "html/template"
 	"log"
 	"net/http"
 	"strconv"
-	ttemplate "text/template"
 	"time"
 )
 
-func init() {
-	http.HandleFunc("/admin/post", post)
-}
-
-func post(w http.ResponseWriter, r *http.Request) {
+func Post(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		save(w, r)
 	} else {
 
 		var postTemplate = htemplate.Must(htemplate.New("").ParseFiles("templates/post.html"))
-		var headerTemplate = ttemplate.Must(ttemplate.New("").ParseFiles("templates/header.html"))
 		var hpb = datatypes.WebPageBody{}
 
 		if err := postTemplate.ExecuteTemplate(&hpb, "post.html", nil); err != nil {
 			log.Fatal(err)
 		}
-		if err := headerTemplate.ExecuteTemplate(w, "header.html", hpb); err != nil {
-			log.Fatal(err)
-		}
+		render.FinishRender(w, hpb.HTMLBody)
 	}
 
 }

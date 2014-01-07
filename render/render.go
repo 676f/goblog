@@ -1,4 +1,4 @@
-package goblog
+package render
 
 import (
 	"fmt"
@@ -14,21 +14,17 @@ import (
 	"appengine/datastore"
 )
 
-func init() {
-	http.HandleFunc("/", renderPosts)
-}
-
 var siteHeaderTemplate = ttemplate.Must(ttemplate.New("").ParseFiles("templates/header.html"))
 var renderTemplate = htemplate.Must(htemplate.New("").ParseFiles("templates/homepage.html", "templates/archive.html", "templates/404.html"))
 
-func renderPosts(w http.ResponseWriter, r *http.Request) {
+func RenderPosts(w http.ResponseWriter, r *http.Request) {
 	if r.URL.String() == "/" {
 		q, err := getQuery(r, -1, 5)
 		if err != nil {
-			finishRender(w, &datatypes.WebPageBody{fmt.Sprintf("<p>%v</p>", err)})
+			FinishRender(w, fmt.Sprintf("<p>%v</p>", err))
 			return
 		}
-		finishRender(w, renderPost(q, "homepage.html"))
+		FinishRender(w, renderPost(q, "homepage.html"))
 		return
 	}
 
@@ -43,27 +39,27 @@ func renderPosts(w http.ResponseWriter, r *http.Request) {
 		if len(splitURL) == 3 {
 			postID, err := strconv.ParseInt(splitURL[2], 10, 64)
 			if err != nil {
-				finishRender(w, Error404(r))
+				FinishRender(w, Error404(r))
 				return
 			}
 			q, err := getQuery(r, postID, 1)
 			if len(q) <= 0 {
-				finishRender(w, Error404(r))
+				FinishRender(w, Error404(r))
 				return
 			} else if err != nil {
-				finishRender(w, &datatypes.WebPageBody{fmt.Sprintf("<p>%v</p>", err)})
+				FinishRender(w, fmt.Sprintf("<p>%v</p>", err))
 				return
 			}
-			finishRender(w, renderPost(q, "homepage.html"))
+			FinishRender(w, renderPost(q, "homepage.html"))
 		} else {
 			q, err := getQuery(r, -1, -1)
 			if err != nil {
-				finishRender(w, &datatypes.WebPageBody{fmt.Sprintf("<p>%v</p>", err)})
+				FinishRender(w, fmt.Sprintf("<p>%v</p>", err))
 			}
-			finishRender(w, renderPost(q, "archive.html"))
+			FinishRender(w, renderPost(q, "archive.html"))
 		}
 	default:
-		finishRender(w, Error404(r))
+		FinishRender(w, Error404(r))
 		return
 	}
 }
@@ -71,13 +67,13 @@ func renderPosts(w http.ResponseWriter, r *http.Request) {
 // renderPost renders a single post if postID != -1, or it renders the specified number of posts (newest first) if numToRender != -1.
 // If both parameters are -1, then it renders all posts (newest first).
 // The function returns a string of the resulting templated HTML.
-func renderPost(allPosts []*datatypes.Post, postTemplateName string) *datatypes.WebPageBody {
+func renderPost(allPosts []*datatypes.Post, postTemplateName string) string {
 	hpb := datatypes.WebPageBody{}
 	if err := renderTemplate.ExecuteTemplate(&hpb, postTemplateName, allPosts); err != nil {
-		return &datatypes.WebPageBody{fmt.Sprintf("<p>ERROR. renderTemplate.Execute() returned `%v`</p>", err)}
+		return fmt.Sprintf("<p>ERROR. renderTemplate.Execute() returned `%v`</p>", err)
 	}
 
-	return &hpb
+	return hpb.HTMLBody
 }
 
 func getQuery(r *http.Request, postID int64, numToRender int) ([]*datatypes.Post, error) {
@@ -110,16 +106,16 @@ func getQuery(r *http.Request, postID int64, numToRender int) ([]*datatypes.Post
 	return allPosts, nil
 }
 
-func Error404(r *http.Request) *datatypes.WebPageBody {
+func Error404(r *http.Request) string {
 	hpb := datatypes.WebPageBody{}
 	if err := renderTemplate.ExecuteTemplate(&hpb, "404.html", r); err != nil {
-		return &datatypes.WebPageBody{fmt.Sprintf("<p>ERROR. renderTemplate.Execute() returned `%v`</p>", err)}
+		return fmt.Sprintf("<p>ERROR. renderTemplate.Execute() returned `%v`</p>", err)
 	}
 
-	return &hpb
+	return hpb.HTMLBody
 }
 
-func finishRender(w http.ResponseWriter, hpb *datatypes.WebPageBody) {
+func FinishRender(w http.ResponseWriter, hpb string) {
 	finalHpb := datatypes.WebPageBody{}
 	if err := siteHeaderTemplate.ExecuteTemplate(&finalHpb, "header.html", hpb); err != nil {
 		fmt.Fprintf(w, "<p>ERROR. renderTemplate.Execute() returned `%v`</p>", err)
