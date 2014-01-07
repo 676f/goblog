@@ -3,7 +3,7 @@ package render
 import (
 	"fmt"
 	"github.com/676f/goblog/datatypes"
-	htemplate "html/template"
+//	htemplate "html/template"
 	"net/http"
 	"sort"
 	"strconv"
@@ -15,7 +15,7 @@ import (
 )
 
 var siteHeaderTemplate = ttemplate.Must(ttemplate.New("").ParseFiles("templates/header.html"))
-var renderTemplate = htemplate.Must(htemplate.New("").ParseFiles("templates/homepage.html", "templates/archive.html", "templates/404.html"))
+var renderTemplate = ttemplate.Must(ttemplate.New("").ParseFiles("templates/homepage.html", "templates/archive.html", "templates/404.html"))
 
 func RenderPosts(w http.ResponseWriter, r *http.Request) {
 	if r.URL.String() == "/" {
@@ -89,7 +89,7 @@ func getQuery(r *http.Request, postID int64, numToRender int) ([]*datatypes.Post
 		// There has got to be a better way to do this, and this might be a waste of a key, but since uses the same ID, maybe it doesn't matter.
 		q = datastore.NewQuery("post").Filter("__key__=", datastore.NewKey(c, "post", "", postID, nil))
 	} else if numToRender != -1 {
-		q = datastore.NewQuery("post").Limit(numToRender)
+		q = datastore.NewQuery("post").Order("-Date").Limit(numToRender)
 	}
 
 	var allPosts []*datatypes.Post

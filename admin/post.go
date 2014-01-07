@@ -44,5 +44,6 @@ func save(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
+	time.Sleep(500*time.Millisecond)
 	http.Redirect(w, r, "/posts/"+strconv.FormatInt(key.IntID(), 10), http.StatusFound)
 }
