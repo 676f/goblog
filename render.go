@@ -23,7 +23,12 @@ var renderTemplate = htemplate.Must(htemplate.New("").ParseFiles("templates/home
 
 func renderPosts(w http.ResponseWriter, r *http.Request) {
 	if r.URL.String() == "/" {
-		fmt.Fprintf(w, renderPost(r, -1, 5, "homepage.html"))
+		q, err := getQuery(r, -1, 5)
+		if err != nil {
+			finishRender(w, &datatypes.WebPageBody{fmt.Sprintf("<p>%v</p>", err)})
+			return
+		}
+		finishRender(w, renderPost(q, "homepage.html"))
 		return
 	}
 
@@ -38,15 +43,27 @@ func renderPosts(w http.ResponseWriter, r *http.Request) {
 		if len(splitURL) == 3 {
 			postID, err := strconv.ParseInt(splitURL[2], 10, 64)
 			if err != nil {
-				fmt.Fprintf(w, Error404(r))
+				finishRender(w, Error404(r))
 				return
 			}
-			fmt.Fprintf(w, renderPost(r, postID, -1, "homepage.html"))
+			q, err := getQuery(r, postID, 1)
+			if len(q) <= 0 {
+				finishRender(w, Error404(r))
+				return
+			} else if err != nil {
+				finishRender(w, &datatypes.WebPageBody{fmt.Sprintf("<p>%v</p>", err)})
+				return
+			}
+			finishRender(w, renderPost(q, "homepage.html"))
 		} else {
-			fmt.Fprintf(w, renderPost(r, -1, -1, "archive.html"))
+			q, err := getQuery(r, -1, -1)
+			if err != nil {
+				finishRender(w, &datatypes.WebPageBody{fmt.Sprintf("<p>%v</p>", err)})
+			}
+			finishRender(w, renderPost(q, "archive.html"))
 		}
 	default:
-		fmt.Fprintf(w, "<p>404<br>Tried to fetch with %v</p>", splitURL)
+		finishRender(w, Error404(r))
 		return
 	}
 }
@@ -54,11 +71,17 @@ func renderPosts(w http.ResponseWriter, r *http.Request) {
 // renderPost renders a single post if postID != -1, or it renders the specified number of posts (newest first) if numToRender != -1.
 // If both parameters are -1, then it renders all posts (newest first).
 // The function returns a string of the resulting templated HTML.
-func renderPost(r *http.Request, postID int64, numToRender int, postTemplateName string) string {
-	c := appengine.NewContext(r)
+func renderPost(allPosts []*datatypes.Post, postTemplateName string) *datatypes.WebPageBody {
 	hpb := datatypes.WebPageBody{}
-	finalHpb := datatypes.WebPageBody{}
+	if err := renderTemplate.ExecuteTemplate(&hpb, postTemplateName, allPosts); err != nil {
+		return &datatypes.WebPageBody{fmt.Sprintf("<p>ERROR. renderTemplate.Execute() returned `%v`</p>", err)}
+	}
 
+	return &hpb
+}
+
+func getQuery(r *http.Request, postID int64, numToRender int) ([]*datatypes.Post, error) {
+	c := appengine.NewContext(r)
 	q := datastore.NewQuery("post")
 	if postID > -1 {
 		// According to https://developers.google.com/appengine/docs/go/datastore/queries#Go_Filters,
@@ -76,10 +99,7 @@ func renderPost(r *http.Request, postID int64, numToRender int, postTemplateName
 	var allPosts []*datatypes.Post
 	keys, err := q.GetAll(c, &allPosts)
 	if err != nil {
-		return fmt.Sprintf("<p>ERROR. q.GetAll() returned `%v`</p>", err)
-	}
-	if len(allPosts) == 0 {
-		return Error404(r)
+		return nil, err
 	}
 
 	for i := range allPosts {
@@ -87,26 +107,24 @@ func renderPost(r *http.Request, postID int64, numToRender int, postTemplateName
 	}
 	sort.Sort(sort.Reverse(datatypes.Posts(allPosts)))
 
-	if err := renderTemplate.ExecuteTemplate(&hpb, postTemplateName, allPosts); err != nil {
-		return fmt.Sprintf("<p>ERROR. renderTemplate.Execute() returned `%v`</p>", err)
-	}
-	if err := siteHeaderTemplate.ExecuteTemplate(&finalHpb, "header.html", hpb); err != nil {
-		return fmt.Sprintf("<p>ERROR. renderTemplate.Execute() returned `%v`</p>", err)
-	}
-
-	return finalHpb.HTMLBody
+	return allPosts, nil
 }
 
-func Error404(r *http.Request) string {
+func Error404(r *http.Request) *datatypes.WebPageBody {
 	hpb := datatypes.WebPageBody{}
-	finalHpb := datatypes.WebPageBody{}
-
 	if err := renderTemplate.ExecuteTemplate(&hpb, "404.html", r); err != nil {
-		return fmt.Sprintf("<p>ERROR. renderTemplate.Execute() returned `%v`</p>", err)
-	}
-	if err := siteHeaderTemplate.ExecuteTemplate(&finalHpb, "header.html", hpb); err != nil {
-		return fmt.Sprintf("<p>ERROR. renderTemplate.Execute() returned `%v`</p>", err)
+		return &datatypes.WebPageBody{fmt.Sprintf("<p>ERROR. renderTemplate.Execute() returned `%v`</p>", err)}
 	}
 
-	return finalHpb.HTMLBody
+	return &hpb
+}
+
+func finishRender(w http.ResponseWriter, hpb *datatypes.WebPageBody) {
+	finalHpb := datatypes.WebPageBody{}
+	if err := siteHeaderTemplate.ExecuteTemplate(&finalHpb, "header.html", hpb); err != nil {
+		fmt.Fprintf(w, "<p>ERROR. renderTemplate.Execute() returned `%v`</p>", err)
+		return
+	}
+
+	fmt.Fprint(w, finalHpb.HTMLBody)
 }
