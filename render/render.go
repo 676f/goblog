@@ -3,7 +3,6 @@ package render
 import (
 	"fmt"
 	"github.com/676f/goblog/datatypes"
-//	htemplate "html/template"
 	"net/http"
 	"sort"
 	"strconv"

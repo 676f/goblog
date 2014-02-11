@@ -4,7 +4,7 @@
 	<script src="/stylesheets/nicEdit.js" type="text/javascript"></script>
 	<script type="text/javascript">
 		bkLib.onDomLoaded(function() {	new nicEditor().panelInstance('blogcontent'); 	});
-</script>
+    </script>
 </head>
 <body>
 	<form action="/admin/post" method="post">
@@ -14,7 +14,7 @@
 		<tr><td><br/></td></tr>
 		<tr>
 			<td>Title</td>
-			<td><textarea name="title" rows="1" cols="80"></textarea></td>
+			<td><textarea name="title" rows="1" cols="80" required></textarea></td>
 		</tr>
 		<tr>
 			<td>Content</td>
