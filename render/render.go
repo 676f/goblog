@@ -22,7 +22,6 @@ func RenderPosts(w http.ResponseWriter, r *http.Request) {
 	url := strings.Join(protocolRegexp.Split(r.URL.String(), -1), "")
 	//fmt.Fprintln(w, url)
 	splitURLWithSlashes := strings.Split(url, "/")
-	//fmt.Fprintln(w, splitURL, len(splitURL))
 
 	//remove empty spaces that used to be "/"'s
 	splitURL := make([]string, 1)
@@ -32,13 +31,14 @@ func RenderPosts(w http.ResponseWriter, r *http.Request) {
 		}
 		splitURL = append(splitURL, splitURLWithSlashes[i])
 	}
+	//fmt.Fprintln(w, splitURL, len(splitURL))
 	if len(splitURLWithSlashes) < 2 {
 		FinishRender(w, Error404(r))
 		return
 	}
 
 	// if there is no path after domain name
-	if r.URL.String() == "/" {
+	if splitURLWithSlashes[1] == "" {
 		q, err := getQuery(r, -1, 5, "posts")
 		if err != nil {
 			FinishRender(w, fmt.Sprintf("<p>%v</p>", err))

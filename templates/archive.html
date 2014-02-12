@@ -1,17 +1,32 @@
-<table id="archive_table">
-	<tr>
-		<th>Title</th>
-		<th>Author</th>
-		<th>Date</th>
-        <th>Tags</th>
-	</tr>
-
-	{{range .}}
-	<tr>
-		<td><b><a href="/posts/{{.ID}}">{{.Title}}</a></b></td>
-		<td>{{.Author}}</td>
-		<td>{{.DateString}}</td>
-        <td>{{range .Tags}}<a href="/tags/{{.}}" style="text-decoration:underline; color:black;">{{.}}</a> {{end}}</td>
-	</tr>
-	{{end}}
-</table>
+<div class="span12">
+    <div class="col-md-3">
+        <h3>Title</h3> <br/>
+        {{range .}}
+        <b><a href="/posts/{{.ID}}">{{.Title}}</a></b>
+        <br/>
+        {{end}}
+    </div>
+    <div class="col-md-3">
+        <h3>Author</h3> <br/>
+        {{range .}}
+        {{.Author}}
+        <br/>
+        {{end}}
+    </div>
+    <div class="col-md-3">
+        <h3>Date</h3> <br/>
+        {{range .}}
+        {{.DateString}}
+        <br/>
+        {{end}}
+    </div>
+    <div class="col-md-3">
+        <h3>Tags</h3> <br/>
+        {{range .}}
+        {{range .Tags}}
+        <a href="/tags/{{.}}">{{.}}</a>
+        {{end}}
+        <br/>
+        {{end}}
+    </div>
+</div>
