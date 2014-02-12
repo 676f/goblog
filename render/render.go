@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/676f/goblog/datatypes"
 	"net/http"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -15,9 +16,16 @@ import (
 
 var siteHeaderTemplate = ttemplate.Must(ttemplate.New("").ParseFiles("templates/header.html"))
 var renderTemplate = ttemplate.Must(ttemplate.New("").ParseFiles("templates/homepage.html", "templates/archive.html", "templates/404.html"))
+var protocolRegexp = regexp.MustCompilePOSIX("https?://")
 
 func RenderPosts(w http.ResponseWriter, r *http.Request) {
-	if r.URL.String() == "/" {
+	url := strings.Join(protocolRegexp.Split(r.URL.String(), -1), "")
+	//fmt.Fprintln(w, url)
+	splitURL := strings.SplitAfter(url, "/")
+	//fmt.Fprintln(w, splitURL, len(splitURL))
+
+	// if there is no path after domain name
+	if splitURL[1] == "" {
 		q, err := getQuery(r, -1, 5)
 		if err != nil {
 			FinishRender(w, fmt.Sprintf("<p>%v</p>", err))
@@ -27,12 +35,14 @@ func RenderPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	splitURL := strings.SplitAfter(r.URL.String(), "/")
 	// if the first part of the URL ends with '/', remove the '/'
 	if splitURL[1][len(splitURL[1])-1] == '/' {
 		splitURL[1] = splitURL[1][:len(splitURL[1])-1]
 	}
 
+	templatePage := ""
+	q := datatypes.Posts{}
+	var err error
 	switch splitURL[1] {
 	case "posts":
 		if len(splitURL) == 3 {
@@ -41,7 +51,7 @@ func RenderPosts(w http.ResponseWriter, r *http.Request) {
 				FinishRender(w, Error404(r))
 				return
 			}
-			q, err := getQuery(r, postID, 1)
+			q, err = getQuery(r, postID, 1)
 			if len(q) <= 0 {
 				FinishRender(w, Error404(r))
 				return
@@ -49,18 +59,20 @@ func RenderPosts(w http.ResponseWriter, r *http.Request) {
 				FinishRender(w, fmt.Sprintf("<p>%v</p>", err))
 				return
 			}
-			FinishRender(w, renderPost(q, "homepage.html"))
+			templatePage = "homepage.html"
 		} else {
-			q, err := getQuery(r, -1, -1)
+			q, err = getQuery(r, -1, -1)
 			if err != nil {
 				FinishRender(w, fmt.Sprintf("<p>%v</p>", err))
+				return
 			}
-			FinishRender(w, renderPost(q, "archive.html"))
+			templatePage = "archive.html"
 		}
 	default:
 		FinishRender(w, Error404(r))
 		return
 	}
+	FinishRender(w, renderPost(q, templatePage))
 }
 
 // renderPost renders a single post if postID != -1, or it renders the specified number of posts (newest first) if numToRender != -1.
