@@ -6,9 +6,14 @@ import (
 )
 
 type Post struct {
-	Author, Title, Text, DateString string
-	GoDate                          time.Time
-	ID                              int64
+	Author, Title, Text string
+	GoDate              time.Time
+	ID                  int64
+	Tags                []string
+}
+
+func (p *Post) DateString() string {
+	return p.GoDate.Format("Jan 2, 2006")
 }
 
 type Posts []*Post

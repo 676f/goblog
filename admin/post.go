@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -38,17 +39,24 @@ func save(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	u := user.Current(c)
 
+	tags := strings.Split(r.FormValue("tags"), ",")
 	p := datatypes.Post{
-		Author:     u.String(),
-		Title:      r.FormValue("title"),
-		Text:       r.FormValue("blogcontent"),
-		DateString: "",
-		GoDate:     time.Now(),
-		ID:         -1,
+		Author: u.String(),
+		Title:  r.FormValue("title"),
+		Text:   r.FormValue("blogcontent"),
+		GoDate: time.Now(),
+		ID:     -1,
+		Tags:   tags,
 	}
-	key, err := datastore.Put(c, datastore.NewIncompleteKey(c, "post", nil), &p)
+	key, err := datastore.Put(c, datastore.NewIncompleteKey(c, "posts", nil), &p)
 	if err != nil {
 		log.Fatal(err)
+	}
+	for i := range tags {
+		_, err := datastore.Put(c, datastore.NewIncompleteKey(c, tags[i], nil), &p)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	time.Sleep(500 * time.Millisecond)
