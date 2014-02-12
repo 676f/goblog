@@ -38,12 +38,19 @@ func save(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	u := user.Current(c)
 
-	p := datatypes.Post{u.String(), r.FormValue("title"), r.FormValue("blogcontent"), time.Now(), -1}
+	p := datatypes.Post{
+		Author:     u.String(),
+		Title:      r.FormValue("title"),
+		Text:       r.FormValue("blogcontent"),
+		DateString: "",
+		GoDate:     time.Now(),
+		ID:         -1,
+	}
 	key, err := datastore.Put(c, datastore.NewIncompleteKey(c, "post", nil), &p)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	time.Sleep(500*time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 	http.Redirect(w, r, "/posts/"+strconv.FormatInt(key.IntID(), 10), http.StatusFound)
 }

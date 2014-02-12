@@ -64,26 +64,23 @@ body {
 .post {
 	font-family:"Verdana", Geneva, sans-serif;
 	margin-top:10px;
-	/*border:2px;*/
-	/*border-style:solid;*/
-	/*border-color:black;*/
-	/*background-color:white;*/
 	width:670px;
 	padding:5px;
-
-	/*border-radius:5px;*/
-	/*box-shadow:10px 10px 5px #888888;*/
 	float:left;
 }
 
 .post_header {
-	border-bottom-style:dotted;
-	border-bottom-color:black;
-	border-left-style:dotted;
+	border-left-style:groove;
 	border-left-color:black;
-	/*color:5e606b;*/
-	padding:0px;
+    /*color:5e606b;*/
+    padding:0px;
+    padding-left:5px;
     width:670px;
+}
+
+.post_header a {
+    text-decoration:none;
+    /*color:5e606b;*/
 }
 
 .post_text {

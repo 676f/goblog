@@ -6,15 +6,15 @@ import (
 )
 
 type Post struct {
-	Author, Title, Text string
-	Date                time.Time
-	ID                  int64
+	Author, Title, Text, DateString string
+	GoDate                          time.Time
+	ID                              int64
 }
 
 type Posts []*Post
 
 func (p Posts) Less(i, j int) bool {
-	return int(p[i].Date.Sub(p[j].Date)) < 0
+	return int(p[i].GoDate.Sub(p[j].GoDate)) < 0
 }
 
 func (p Posts) Len() int { return len(p) }

@@ -88,7 +88,7 @@ func getQuery(r *http.Request, postID int64, numToRender int) ([]*datatypes.Post
 		// There has got to be a better way to do this, and this might be a waste of a key, but since uses the same ID, maybe it doesn't matter.
 		q = datastore.NewQuery("post").Filter("__key__=", datastore.NewKey(c, "post", "", postID, nil))
 	} else if numToRender != -1 {
-		q = datastore.NewQuery("post").Order("-Date").Limit(numToRender)
+		q = datastore.NewQuery("post").Order("-GoDate").Limit(numToRender)
 	}
 
 	var allPosts []*datatypes.Post
@@ -99,6 +99,7 @@ func getQuery(r *http.Request, postID int64, numToRender int) ([]*datatypes.Post
 
 	for i := range allPosts {
 		allPosts[i].ID = keys[i].IntID()
+		allPosts[i].DateString = allPosts[i].GoDate.Format("Jan 2, 2006")
 	}
 	sort.Sort(sort.Reverse(datatypes.Posts(allPosts)))
 
